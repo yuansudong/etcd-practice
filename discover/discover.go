@@ -31,17 +31,22 @@ func (h *Hub) Run(client *clientv3.Client, prefix string) error {
 	if mGetErr != nil {
 		return mGetErr
 	}
+
 	for _, item := range mGetRsp.Kvs {
 		h._Add(string(item.Key), string(item.Value))
 	}
+	h._Wg.Add(1)
 	go func() {
-		h._Wg.Add(1)
 		defer h._Wg.Done()
 		for {
 			select {
 			case <-h._Ctx.Done():
 				return
-			case events := <-cWatchChan:
+			case events, ok := <-cWatchChan:
+				if !ok {
+					cWatchChan = client.Watch(h._Ctx, h._Prefix)
+					continue
+				}
 				for _, ev := range events.Events {
 					switch ev.Type {
 					case clientv3.EventTypePut:

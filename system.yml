@@ -1,0 +1,5 @@
+mysql: "this is  mysql addr"
+redis: "this is  redis addr"
+nats: "this is nats addr"
+nsqd: "this is nsqd addr"
+
